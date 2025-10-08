@@ -41,7 +41,7 @@ These are the two main issues that i have,
 */
 import dotenv from "dotenv";
 import express, { Request, Response } from 'express';
-import router from './router/routes';
+import { credentialRouter } from "./router/routes";
 import os from "os";
 import { initDatabase, closeDatabase } from "./Database/db";
 import cors from "cors"
@@ -55,12 +55,12 @@ app.use(cors())
 // initialize the DB
 initDatabase();
 
-app.get("/" , (req:Request,res:Response) => {
-    console.log("AA gaye tum! ");
-    res.status(200).json({
-        "message":"you are connected!"
-    })
-})
+// app.get("/" , (req:Request,res:Response) => {
+//     console.log("AA gaye tum! ");
+//     res.status(200).json({
+//         "message":"you are connected!"
+//     })
+// })
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
@@ -71,7 +71,7 @@ app.get('/health', (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   });
-app.use(router);
+app.use(credentialRouter);
 
 const PORT = Number(process.env.PORT || 3000);
 const server = app.listen(PORT, ()=> {
@@ -98,4 +98,4 @@ const shutdown = (signal: string) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-console.log("hello world");
+// console.log("hello world");

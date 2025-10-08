@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/database/db.ts","./src/config/types.ts","./src/router/routes.ts"],"version":"5.9.3"}
+{"root":["./src/index.ts","./src/database/db.ts","./src/config/types.ts","./src/router/routes.ts","./src/services/issuance-serv.ts"],"version":"5.9.3"}
