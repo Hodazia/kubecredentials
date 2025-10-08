@@ -26,7 +26,7 @@ export class VerificationService {
 
   constructor() {
     this.workerId = process.env.HOSTNAME || os.hostname();
-    this.issuanceServiceUrl = process.env.ISSUANCE_SERVICE_URL || 'http://localhost:3000';
+    this.issuanceServiceUrl = process.env.ISSUANCE_SERVICE_URL || 'http://issuance-service:3000';
   }
 
   /**
@@ -105,7 +105,12 @@ export class VerificationService {
   public getVerificationHistory(limit: number = 100): any[] {
     const db = getDatabase();
     const rows = db.prepare(
-      'SELECT * FROM verification_logs ORDER BY verified_at DESC LIMIT ?'
+      `SELECT * FROM verification_logs
+       WHERE id IN (
+         SELECT MAX(id) FROM verification_logs GROUP BY credential_hash
+       )
+       ORDER BY verified_at DESC
+       LIMIT ?`
     ).all(limit);
 
     return rows.map((row: any) => ({

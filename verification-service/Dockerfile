@@ -1,21 +1,30 @@
-FROM node:22-alpine as deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev
+# Build stage
+FROM node:20-alpine AS builder
 
-FROM node:22-alpine as builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY tsconfig.json ./
-COPY src ./src
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
 RUN npm run build
 
-FROM node:22-alpine as runner
-WORKDIR /app
-ENV NODE_ENV=production \
-    PORT=3001
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-EXPOSE 3001
-CMD ["node", "dist/index.js"]
+# Production stage
+FROM node:20-alpine
 
+WORKDIR /app
+
+# Install production dependencies only
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy built application
+COPY --from=builder /app/dist ./dist
+
+# Create data directory for SQLite
+RUN mkdir -p /app/data
+
+# Expose port
+EXPOSE 3001
+
+CMD ["node", "dist/index.js"]
