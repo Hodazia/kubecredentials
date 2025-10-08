@@ -55,7 +55,7 @@ router.post('/issue', (req: Request, res: Response) => {
  * GET /api/credentials
  * Get all issued credentials
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/credentials', (req: Request, res: Response) => {
   try {
     const credentials = credentialService.getAllCredentials();
     res.json({
