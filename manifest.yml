@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: issuance-service
+spec:
+  containers:
+  - name: issuance-service
+    image: zia2025/kubecredentials-issuance-service
+    imagePullPolicy: Always
+    ports:
+    - containerPort: 3000

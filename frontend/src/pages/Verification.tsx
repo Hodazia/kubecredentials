@@ -66,7 +66,7 @@ const Verification = () => {
       }
 
       // Call verification API
-      const API_URL = import.meta.env.VITE_VERIFICATION_API_URL || 'http://localhost:3001';
+      const API_URL = import.meta.env.VITE_VERIFICATION_API_URL || 'http://ec2-65-2-74-30.ap-south-1.compute.amazonaws.com:3001';
       const response = await fetch(`${API_URL}/api/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

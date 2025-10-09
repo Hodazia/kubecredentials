@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issuance-deployment
+  labels:
+    app: kube-issuance
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kube-issuance
+  template:
+    metadata:
+      labels:
+        app: kube-issuance
+    spec:
+      containers:
+        - name: issuance
+          image: zia2025/kubecredentials-issuance-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: WORKER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DB_PATH
+              value: /data/issuance.db
+          volumeMounts:
+            - name: issuance-db
+              mountPath: /data
+      volumes:
+        - name: issuance-db
+          persistentVolumeClaim:
+            claimName: issuance-db-pvc

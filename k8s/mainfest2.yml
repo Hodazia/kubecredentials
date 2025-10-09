@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: verificance-service
+spec:
+  containers:
+  - name: verificance-service
+    image: zia2025/kubecredentials-verification-service
+    imagePullPolicy: Always
+    ports:
+    - containerPort: 3001
