@@ -1,12 +1,15 @@
+// 
+
 import { useState } from "react";
 import { toast } from "sonner";
-import { Shield, CheckCircle, AlertCircle, Loader2, FileText, Calendar, User, Award } from "lucide-react";
+import { Shield, CheckCircle, AlertCircle, Loader2, FileText, Calendar, User, Award, Code2 } from "lucide-react";
 
 interface CredentialForm {
   holderName: string;
   credentialType: string;
   issueDate: string;
   expiryDate: string;
+  additionalData: string; // JSON string input
 }
 
 const Issuance = () => {
@@ -14,12 +17,13 @@ const Issuance = () => {
   const [formData, setFormData] = useState<CredentialForm>({
     holderName: "",
     credentialType: "",
-    issueDate: new Date().toISOString().split('T')[0],
-    expiryDate: ""
+    issueDate: new Date().toISOString().split("T")[0],
+    expiryDate: "",
+    additionalData: ""
   });
 
   const handleInputChange = (field: keyof CredentialForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,8 +31,18 @@ const Issuance = () => {
     setLoading(true);
 
     try {
-      // Prepare credential data
-      const credentialData: any = {
+      // Parse optional JSON data
+      let additionalJson: Record<string, any> = {};
+      if (formData.additionalData.trim()) {
+        try {
+          additionalJson = JSON.parse(formData.additionalData.trim());
+        } catch (err) {
+          throw new Error("Invalid JSON format in Additional Data field");
+        }
+      }
+
+      // Combine structured + JSON data
+      const credentialData: Record<string, any> = {
         holderName: formData.holderName.trim(),
         credentialType: formData.credentialType.trim(),
         issueDate: formData.issueDate
@@ -38,13 +52,15 @@ const Issuance = () => {
         credentialData.expiryDate = formData.expiryDate;
       }
 
+      // Merge any custom fields
+      const finalPayload = { ...credentialData, ...additionalJson };
 
-      // Call issuance API
-      const API_URL = import.meta.env.VITE_ISSUANCE_API_URL || 'https://verification.zia-hoda.org';
+      // POST to backend
+      const API_URL = import.meta.env.VITE_ISSUANCE_API_URL || "https://issuance.zia-hoda.org";
       const response = await fetch(`${API_URL}/issue`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentialData)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalPayload)
       });
 
       const result = await response.json();
@@ -54,13 +70,14 @@ const Issuance = () => {
           description: `Credential ID: ${result.credential.id}`,
           icon: <CheckCircle className="h-5 w-5" />
         });
-        
+
         // Reset form
         setFormData({
           holderName: "",
           credentialType: "",
-          issueDate: new Date().toISOString().split('T')[0],
-          expiryDate: ""
+          issueDate: new Date().toISOString().split("T")[0],
+          expiryDate: "",
+          additionalData: ""
         });
       } else {
         toast.error(result.message, {
@@ -91,108 +108,110 @@ const Issuance = () => {
               </div>
             </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold gradient-text">
-            Credential Issuance
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-bold gradient-text">Credential Issuance</h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Issue verifiable credentials securely with our blockchain-inspired system
+            Issue verifiable credentials securely with both fixed and custom data.
           </p>
         </div>
 
-        {/* Issuance Form */}
+        {/* Form */}
         <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-2xl overflow-hidden animate-slideInRight">
-          {/* Header */}
-          <div className="relative p-8 bg-gradient-to-r from-blue-500 to-purple-600">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-            <div className="relative text-center">
-              <div className="flex items-center justify-center mb-4">
-                <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <FileText className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Issue New Credential</h2>
-              <p className="text-blue-100 text-lg">
-                Fill in the details below to issue a new verifiable credential
-              </p>
+          <div className="relative p-8 bg-gradient-to-r from-blue-500 to-purple-600 text-center">
+            <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm inline-block mb-3">
+              <FileText className="h-8 w-8 text-white" />
             </div>
+            <h2 className="text-3xl font-bold text-white mb-2">Issue New Credential</h2>
+            <p className="text-blue-100 text-lg">Fill in the fields and optional JSON data below</p>
           </div>
 
-          {/* Form */}
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Structured Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Holder Name */}
                 <div className="space-y-3">
-                  <label htmlFor="holderName" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <User className="h-4 w-4 text-blue-500" />
                     <span>Holder Name *</span>
                   </label>
                   <input
-                    id="holderName"
-                    placeholder="Enter full name"
                     value={formData.holderName}
-                    onChange={(e) => handleInputChange('holderName', e.target.value)}
+                    onChange={(e) => handleInputChange("holderName", e.target.value)}
+                    placeholder="Enter full name"
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   />
                 </div>
 
                 {/* Credential Type */}
                 <div className="space-y-3">
-                  <label htmlFor="credentialType" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <Award className="h-4 w-4 text-purple-500" />
                     <span>Credential Type *</span>
                   </label>
                   <input
-                    id="credentialType"
-                    placeholder="e.g., Certificate, License, Badge"
                     value={formData.credentialType}
-                    onChange={(e) => handleInputChange('credentialType', e.target.value)}
+                    onChange={(e) => handleInputChange("credentialType", e.target.value)}
+                    placeholder="Certificate, License, etc."
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   />
                 </div>
 
                 {/* Issue Date */}
                 <div className="space-y-3">
-                  <label htmlFor="issueDate" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <Calendar className="h-4 w-4 text-green-500" />
                     <span>Issue Date *</span>
                   </label>
                   <input
-                    id="issueDate"
                     type="date"
                     value={formData.issueDate}
-                    onChange={(e) => handleInputChange('issueDate', e.target.value)}
+                    onChange={(e) => handleInputChange("issueDate", e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   />
                 </div>
 
                 {/* Expiry Date */}
                 <div className="space-y-3">
-                  <label htmlFor="expiryDate" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <Calendar className="h-4 w-4 text-orange-500" />
                     <span>Expiry Date (Optional)</span>
                   </label>
                   <input
-                    id="expiryDate"
                     type="date"
                     value={formData.expiryDate}
-                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 transition-all duration-300"
+                    onChange={(e) => handleInputChange("expiryDate", e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
                   />
                 </div>
               </div>
 
+              {/* JSON Additional Data */}
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Code2 className="h-4 w-4 text-indigo-500" />
+                  <span>Additional JSON Data (Optional)</span>
+                </label>
+                <textarea
+                  rows={6}
+                  value={formData.additionalData}
+                  onChange={(e) => handleInputChange("additionalData", e.target.value)}
+                  placeholder='{\n  "email": "john@example.com",\n  "organization": "ACME Corp"\n}'
+                  className="w-full font-mono text-sm px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Must be valid JSON. Example: {"{ \"email\": \"user@example.com\", \"role\": \"admin\" }"}
+                </p>
+              </div>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
+                className="w-full relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center justify-center space-x-3">
                   {loading ? (
                     <>
@@ -208,23 +227,6 @@ const Issuance = () => {
                 </div>
               </button>
             </form>
-          </div>
-        </div>
-
-        {/* Info Card */}
-        <div className="relative bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl border border-blue-200/50 dark:border-blue-700/50 p-8 animate-fadeInUp">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Shield className="h-6 w-6 text-white" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">How It Works</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Each credential is issued with a unique SHA-256 hash and tracked by the worker pod that processed it.
-                Our system automatically detects and prevents duplicate credentials, ensuring data integrity and security.
-                All credentials are cryptographically signed and stored with persistent volume claims for reliability.
-              </p>
-            </div>
           </div>
         </div>
       </div>
