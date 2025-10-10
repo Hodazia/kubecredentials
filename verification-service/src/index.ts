@@ -28,3 +28,6 @@ app.listen(PORT, () => {
   console.log("the current directory " , process.cwd());
   console.log(`Worker ID: ${WORKER_ID}`);
 });
+
+
+export default app;

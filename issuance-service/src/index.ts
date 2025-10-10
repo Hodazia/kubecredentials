@@ -99,3 +99,5 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
 // console.log("hello world");
+
+export default app

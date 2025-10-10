@@ -40,7 +40,7 @@ const Issuance = () => {
 
 
       // Call issuance API
-      const API_URL = import.meta.env.VITE_ISSUANCE_API_URL || 'http://ec2-65-2-74-30.ap-south-1.compute.amazonaws.com:3000';
+      const API_URL = import.meta.env.VITE_ISSUANCE_API_URL || 'https://verification.zia-hoda.org';
       const response = await fetch(`${API_URL}/issue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
